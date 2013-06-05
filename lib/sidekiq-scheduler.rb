@@ -1,4 +1,9 @@
-require 'sidekiq'
-require 'sidekiq-scheduler/client'
-require 'sidekiq-scheduler/worker'
-require 'sidekiq-scheduler/version'
+require 'sidekiq-scheduler/launcher'
+
+module SidekiqScheduler
+
+  def self.enable_scheduler
+    Sidekiq::Launcher.send(:include, SidekiqScheduler::Launcher)
+  end
+
+end

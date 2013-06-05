@@ -1,14 +1,12 @@
 require 'test_helper'
 
-class ScheduleTest < MiniTest::Unit::TestCase
-  #class ScheduleManager
-  #  extend SidekiqScheduler::ScheduleManager
-  #end
+require 'sidekiq-scheduler/schedule_store'
 
+class ScheduleTest < Minitest::Test
 
   describe 'SidekiqScheduler::Schedule' do
     it 'schedule= sets the schedule' do
-      Sidekiq::Scheduler.dynamic = true
+      Sidekiq.dynamic_schedule = true
       Sidekiq.schedule = {
           'my_ivar_job' => {
               'cron' => '* * * * *',
@@ -30,7 +28,7 @@ class ScheduleTest < MiniTest::Unit::TestCase
     end
 
     it "schedule= uses job name as 'class' argument if it's missing" do
-      Sidekiq::Scheduler.dynamic = true
+      Sidekiq.dynamic_schedule = true
       Sidekiq.schedule = {
           'SomeIvarJob' => {
               'cron' => '* * * * *',
@@ -61,7 +59,7 @@ class ScheduleTest < MiniTest::Unit::TestCase
     end
 
     it 'set_schedule can set an individual schedule' do
-      Sidekiq.set_schedule(
+      SidekiqScheduler::ScheduleStore.set_schedule(
           'some_ivar_job',
           {
               'cron' => '* * * * *',
@@ -98,7 +96,7 @@ class ScheduleTest < MiniTest::Unit::TestCase
               'class' => 'SomeIvarJob',
               'args' => '/tmp/33'
           },
-          Sidekiq.get_schedule('some_ivar_job2')
+          SidekiqScheduler::ScheduleStore.get_schedule('some_ivar_job2')
       )
     end
 
@@ -116,7 +114,8 @@ class ScheduleTest < MiniTest::Unit::TestCase
             )
         )
       end
-      Sidekiq.remove_schedule('some_ivar_job3')
+
+      SidekiqScheduler::ScheduleStore.remove_schedule('some_ivar_job3')
       assert_equal nil, Sidekiq.redis{ |r| r.hget(:schedules, 'some_ivar_job3') }
       assert Sidekiq.redis{ |r| r.sismember(:schedules_changed, 'some_ivar_job3') }
     end
